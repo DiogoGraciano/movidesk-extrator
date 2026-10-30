@@ -11,9 +11,14 @@ conversa legível em Markdown por ticket. As extrações ficam navegáveis dentr
 ## Download
 
 Os instaladores ficam na [última release](https://github.com/DiogoGraciano/movidesk-extrator/releases/latest):
-`.exe` para Windows, `.deb` ou `.AppImage` para Linux. Os pacotes de Linux são compilados no
-Ubuntu 24.04 e servem para distros com glibc 2.39 ou mais nova (Ubuntu 24.04, Debian 13, Fedora 40,
-Linux Mint 22 ou mais recentes).
+`.exe` para Windows, `.deb` ou `.AppImage` para Linux e `.dmg` para macOS.
+
+- **Linux:** os pacotes são compilados no Ubuntu 24.04 e servem para distros com glibc 2.39 ou
+  mais nova (Ubuntu 24.04, Debian 13, Fedora 40, Linux Mint 22 ou mais recentes).
+- **macOS:** o `.dmg` é universal (Apple Silicon e Intel). O app tem só assinatura ad-hoc, sem
+  notarização da Apple, então o macOS bloqueia a primeira abertura. Para liberar, abra
+  **Ajustes do Sistema › Privacidade e Segurança**, role até o fim, clique em
+  **Abrir Mesmo Assim** e confirme em **Abrir**. Depois disso ele abre normalmente.
 
 ## Como usar
 
@@ -90,8 +95,8 @@ bun run typecheck        # TypeScript
 bun run app:build        # instaladores em src-tauri/target/release/bundle
 ```
 
-O workflow `Build` publica uma release a cada push na `main`, depois que os builds de Windows e
-Linux passam. Pushes que só mudam arquivos `.md` não geram release. Pull requests só compilam e
+O workflow `Build` publica uma release a cada push na `main`, depois que os builds de Windows,
+Linux e macOS passam. Pushes que só mudam arquivos `.md` não geram release. Pull requests só compilam e
 deixam os instaladores como artefatos da execução em
 [Actions](https://github.com/DiogoGraciano/movidesk-extrator/actions/workflows/build.yml).
 
