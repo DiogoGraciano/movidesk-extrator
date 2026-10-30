@@ -5,6 +5,7 @@
 //! de CORS e para um unico [`Limitador`] controlar o limite de 10 requisicoes
 //! por minuto da conta, valendo tanto para a busca quanto para a extracao.
 
+mod abrir;
 mod extracao;
 mod movidesk;
 mod saida;
@@ -171,9 +172,7 @@ fn abrir_caminho(app: AppHandle, pasta_base: String, relativo: String) -> Result
     if !alvo.exists() {
         return Err(format!("{} não existe.", alvo.display()));
     }
-    app.opener()
-        .open_path(alvo.to_string_lossy(), None::<&str>)
-        .map_err(|e| e.to_string())
+    abrir::abrir(&app, &alvo)
 }
 
 #[tauri::command]

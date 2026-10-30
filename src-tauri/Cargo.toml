@@ -25,6 +25,11 @@ chrono = { version = "0.4", default-features = false, features = ["clock", "std"
 dirs = "6"
 dotenvy = "0.15"
 
+# Para abrir arquivos e pastas com o ambiente limpo quando o app roda como
+# AppImage (ver src/abrir.rs). Já vem com o tauri-plugin-opener.
+[target.'cfg(target_os = "linux")'.dependencies]
+open = "5"
+
 [profile.release]
 panic = "abort"
 codegen-units = 1
