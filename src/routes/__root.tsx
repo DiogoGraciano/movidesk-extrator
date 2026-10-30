@@ -13,6 +13,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 function Layout() {
   return (
     <div className="flex h-full flex-col">
+      <div className="h-1 shrink-0 bg-marca" />
       <header className="flex h-14 shrink-0 items-center gap-6 border-b bg-card px-5">
         <Link to="/" className="flex items-center gap-2.5">
           <img src="/icon.svg" alt="" className="size-7" />

@@ -3,53 +3,65 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Paleta neutra do shadcn com o azul do ícone (#0284c7, sky-600) como cor
-   primária. O app segue o tema do sistema (classe .dark aplicada em main.tsx). */
+/* Cores do Movidesk: o degradê da marca (rosa #FD2F42, vermelho #F11A13,
+   laranja #FE8723) aparece no ícone, no topo da janela e nas barras de
+   progresso. O primário é o vermelho #EA0401, um tom acima do #F11A13 para o
+   texto branco passar no contraste AA; no tema escuro vira o coral #FF5A47
+   com texto escuro. Neutros levemente quentes para combinar com o vermelho.
+   O app segue o tema do sistema (classe .dark aplicada em main.tsx). */
 :root {
   --radius: 0.625rem;
-  --background: oklch(0.985 0.002 247.839);
-  --foreground: oklch(0.21 0.034 264.665);
+  --marca-1: #fd2f42;
+  --marca-2: #f11a13;
+  --marca-3: #fe8723;
+  --background: oklch(0.985 0.002 30);
+  --foreground: oklch(0.205 0.012 30);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.21 0.034 264.665);
+  --card-foreground: oklch(0.205 0.012 30);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.21 0.034 264.665);
-  --primary: oklch(0.588 0.158 241.966);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.967 0.003 264.542);
-  --secondary-foreground: oklch(0.21 0.034 264.665);
-  --muted: oklch(0.967 0.003 264.542);
-  --muted-foreground: oklch(0.551 0.027 264.364);
-  --accent: oklch(0.951 0.026 236.824);
-  --accent-foreground: oklch(0.391 0.09 240.876);
-  --destructive: oklch(0.577 0.245 27.325);
+  --popover-foreground: oklch(0.205 0.012 30);
+  --primary: oklch(0.589 0.241 29.3);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.965 0.004 30);
+  --secondary-foreground: oklch(0.205 0.012 30);
+  --muted: oklch(0.965 0.004 30);
+  --muted-foreground: oklch(0.52 0.014 30);
+  --accent: oklch(0.962 0.026 24);
+  --accent-foreground: oklch(0.47 0.185 28);
+  --destructive: oklch(0.5 0.2 22);
   --success: oklch(0.596 0.145 163.225);
   --warning: oklch(0.666 0.179 58.318);
-  --border: oklch(0.928 0.006 264.531);
-  --input: oklch(0.928 0.006 264.531);
-  --ring: oklch(0.685 0.169 237.323);
+  --border: oklch(0.918 0.006 30);
+  --input: oklch(0.918 0.006 30);
+  --ring: oklch(0.676 0.206 36.9);
 }
 
 .dark {
-  --background: oklch(0.17 0.015 260);
-  --foreground: oklch(0.967 0.003 264.542);
-  --card: oklch(0.21 0.02 262);
-  --card-foreground: oklch(0.967 0.003 264.542);
-  --popover: oklch(0.21 0.02 262);
-  --popover-foreground: oklch(0.967 0.003 264.542);
-  --primary: oklch(0.685 0.169 237.323);
-  --primary-foreground: oklch(0.17 0.015 260);
-  --secondary: oklch(0.278 0.03 256.848);
-  --secondary-foreground: oklch(0.967 0.003 264.542);
-  --muted: oklch(0.278 0.03 256.848);
-  --muted-foreground: oklch(0.707 0.022 261.325);
-  --accent: oklch(0.293 0.066 243.157);
-  --accent-foreground: oklch(0.901 0.058 230.902);
+  --background: oklch(0.165 0.007 30);
+  --foreground: oklch(0.97 0.004 30);
+  --card: oklch(0.205 0.009 30);
+  --card-foreground: oklch(0.97 0.004 30);
+  --popover: oklch(0.205 0.009 30);
+  --popover-foreground: oklch(0.97 0.004 30);
+  --primary: oklch(0.686 0.204 29.8);
+  --primary-foreground: oklch(0.165 0.007 30);
+  --secondary: oklch(0.27 0.011 30);
+  --secondary-foreground: oklch(0.97 0.004 30);
+  --muted: oklch(0.27 0.011 30);
+  --muted-foreground: oklch(0.71 0.014 30);
+  --accent: oklch(0.29 0.065 27);
+  --accent-foreground: oklch(0.88 0.065 30);
   --destructive: oklch(0.704 0.191 22.216);
   --success: oklch(0.765 0.177 163.223);
   --warning: oklch(0.828 0.189 84.429);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.588 0.158 241.966);
+  --ring: oklch(0.589 0.241 29.3);
+}
+
+/* Degradê da marca, na mesma direção do ícone. */
+@utility bg-marca {
+  background-image: linear-gradient(100deg, var(--marca-1), var(--marca-2) 50%, var(--marca-3));
 }
 
 @theme inline {

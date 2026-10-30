@@ -168,8 +168,8 @@ function Acao({ acao, anexos, pastaBase }: { acao: AcaoMovidesk; anexos: AnexoLo
     <article
       className={cn(
         'rounded-lg border bg-card',
-        doCliente && 'border-l-4 border-l-sky-500/70',
-        doAgente && !interna && 'border-l-4 border-l-primary/30',
+        doCliente && 'border-l-4 border-l-primary',
+        doAgente && !interna && 'border-l-4 border-l-muted-foreground/25',
         interna && 'border-dashed border-amber-500/50 bg-amber-500/5',
       )}
     >
@@ -177,7 +177,7 @@ function Acao({ acao, anexos, pastaBase }: { acao: AcaoMovidesk; anexos: AnexoLo
         <span
           className={cn(
             'flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground',
-            doCliente && 'bg-sky-500/15 text-sky-700 dark:text-sky-300',
+            doCliente && 'bg-accent text-accent-foreground',
           )}
           aria-hidden
         >
@@ -186,7 +186,7 @@ function Acao({ acao, anexos, pastaBase }: { acao: AcaoMovidesk; anexos: AnexoLo
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
             <span className="truncate text-sm font-medium">{autor ?? 'Sistema'}</span>
-            {doCliente && <span className="text-xs text-sky-700 dark:text-sky-300">cliente</span>}
+            {doCliente && <span className="text-xs font-medium text-primary">cliente</span>}
             {interna && (
               <Badge variant="outline" className="gap-1 border-amber-500/50 text-amber-700 dark:text-amber-300">
                 <LockIcon className="size-3" />

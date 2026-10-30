@@ -1,4 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#0284c7"/>
-  <text x="32" y="32" dy="0.35em" text-anchor="middle" font-family="ui-sans-serif, system-ui, -apple-system, sans-serif" font-size="26" font-weight="600" fill="#ffffff">ME</text>
+  <defs>
+    <linearGradient id="fundo" x1="6" y1="4" x2="58" y2="62" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FD2F42"/>
+      <stop offset="0.5" stop-color="#F11A13"/>
+      <stop offset="1" stop-color="#FE8723"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="url(#fundo)"/>
+  <path d="M21 14h22a9 9 0 0 1 9 9v12a9 9 0 0 1-9 9H31.5l-8.6 7.2A1.5 1.5 0 0 1 20.5 50v-6.1A9 9 0 0 1 12 35V23a9 9 0 0 1 9-9z" fill="#fff"/>
+  <path d="M32 21.5v12.5M26.5 29l5.5 5.5 5.5-5.5" fill="none" stroke="#EA0401" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="49.5" cy="49.5" r="5" fill="#fff"/>
 </svg>
