@@ -1,0 +1,10 @@
+node_modules/
+dist/
+src-tauri/target/
+src-tauri/gen/schemas/
+*.tsbuildinfo
+
+# Chave da API do Movidesk: nunca vai pro repositório
+.env
+.env.*
+!.env.example
