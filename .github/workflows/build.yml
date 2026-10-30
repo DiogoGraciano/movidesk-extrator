@@ -1,41 +1,83 @@
 name: Build
 
 # Gera os instaladores de Linux (.deb e .AppImage) e Windows (.exe NSIS) em
-# cada push e PR para a main, e deixa os arquivos como artefatos da execução.
-# Ao empurrar uma tag v* (ex.: v0.1.0), publica também uma release com eles.
+# cada push e PR para a main e deixa os arquivos como artefatos da execução.
+# Em push na main (ou execução manual na main), publica também uma release com
+# os instaladores, depois que os dois builds passam.
+#
+# Versão: enquanto a versão do src-tauri/tauri.conf.json não tiver tag, a
+# release usa ela. Depois, cada release soma 1 no último número da última tag
+# (0.1.0, 0.1.1, 0.1.2...). Para ir para 0.2.0 ou 1.0.0, mude a versão no
+# tauri.conf.json.
 #
 # O CI nunca recebe a chave do Movidesk: os testes que chamam a API real são
 # `#[ignore]` e só rodam na máquina de quem tem o .env.
 on:
   push:
     branches: [main]
-    tags: ["v*"]
+    # Mudança só em documentação não gera release nova.
+    paths-ignore: ["**.md", ".env.example"]
   pull_request:
     branches: [main]
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
+# Na main as execuções entram na fila em vez de se cancelarem: cada uma
+# calcula a versão a partir da tag da anterior, então não podem se sobrepor.
 concurrency:
   group: build-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref_type != 'tag' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  versao:
+    runs-on: ubuntu-24.04
+    outputs:
+      versao: ${{ steps.versao.outputs.versao }}
+      anterior: ${{ steps.versao.outputs.anterior }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Calcular versão
+        id: versao
+        run: |
+          base=$(jq -r .version src-tauri/tauri.conf.json)
+          anterior=$(git ls-remote --tags --refs origin 'v*' \
+            | sed 's#.*refs/tags/v##' \
+            | { grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' || true; } \
+            | sort -V | tail -n1)
+          if [ -z "$anterior" ] || [ "$(printf '%s\n%s\n' "$anterior" "$base" | sort -V | tail -n1)" != "$anterior" ]; then
+            versao=$base
+          else
+            IFS=. read -r maior menor correcao <<< "$anterior"
+            versao="$maior.$menor.$((correcao + 1))"
+          fi
+          echo "Versão $versao (tauri.conf.json: $base, última tag: ${anterior:-nenhuma})"
+          echo "versao=$versao" >> "$GITHUB_OUTPUT"
+          echo "anterior=$anterior" >> "$GITHUB_OUTPUT"
+
   build:
+    needs: versao
     strategy:
       fail-fast: false
       matrix:
         include:
-          - platform: ubuntu-22.04
+          # O binário de Linux só roda em distros com glibc igual ou mais nova
+          # que a do runner, por isso o build usa o Ubuntu mais antigo que o
+          # GitHub ainda mantém (24.04, glibc 2.39). O 22.04 está em descontinuação
+          # desde 17/09/2026 e sai de vez em 17/04/2027.
+          - platform: ubuntu-24.04
             args: "--bundles deb,appimage"
           - platform: windows-latest
             args: "--bundles nsis"
 
     runs-on: ${{ matrix.platform }}
+    env:
+      VERSAO: ${{ needs.versao.outputs.versao }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Instalar dependências do sistema (Linux)
         if: runner.os == 'Linux'
@@ -56,7 +98,7 @@ jobs:
 
       # O Vite roda no Node (o binário dele tem shebang de node).
       - name: Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
 
@@ -67,6 +109,26 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: "./src-tauri -> target"
+
+      # Fica depois do cache para a chave dele não mudar a cada versão. A
+      # versão do tauri.conf.json vai para os instaladores; a do Cargo.toml,
+      # para o binário.
+      - name: Aplicar versão ${{ env.VERSAO }}
+        shell: bash
+        run: |
+          node -e '
+            const fs = require("fs")
+            const versao = process.env.VERSAO
+            const conf = "src-tauri/tauri.conf.json"
+            const json = JSON.parse(fs.readFileSync(conf, "utf8"))
+            json.version = versao
+            fs.writeFileSync(conf, JSON.stringify(json, null, 2) + "\n")
+            const cargo = "src-tauri/Cargo.toml"
+            const toml = fs.readFileSync(cargo, "utf8")
+            fs.writeFileSync(cargo, toml.replace(/^version = ".*"$/m, "version = \"" + versao + "\""))
+          '
+          grep -m1 '"version"' src-tauri/tauri.conf.json
+          grep -m1 '^version' src-tauri/Cargo.toml
 
       - name: Instalar dependências
         run: bun install --frozen-lockfile
@@ -79,23 +141,11 @@ jobs:
       - name: Testes do Rust
         run: cargo test --manifest-path src-tauri/Cargo.toml
 
-      # Sem tag, o tauri-action só compila; com tag, cria a release e anexa os
-      # instaladores.
       - name: Build (Tauri)
-        uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tauriScript: bun run tauri
-          args: ${{ matrix.args }}
-          tagName: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
-          releaseName: "Movidesk Extrator ${{ github.ref_name }}"
-          releaseBody: "Extrai todos os tickets de um cliente do Movidesk com o histórico completo de conversa. Linux: .deb ou .AppImage. Windows: instalador .exe."
-          releaseDraft: false
-          prerelease: false
+        run: bun run tauri build ${{ matrix.args }}
 
       # O linuxdeploy (usado pelo bundler do Tauri) empacota a
-      # libwayland-client do runner (Ubuntu 22.04) dentro do AppImage. Em
+      # libwayland-client do runner (Ubuntu 24.04) dentro do AppImage. Em
       # distros com Mesa mais nova (rolling release), essa versão quebra o EGL
       # do WebKit e a janela abre em branco (tauri-apps/tauri#15665). Remover a
       # lib do pacote força o uso da libwayland-client do sistema.
@@ -116,17 +166,9 @@ jobs:
           ./appimagetool --appimage-extract-and-run --no-appstream squashfs-root "$APPIMAGE"
           rm -rf squashfs-root appimagetool
 
-      - name: Reenviar AppImage corrigido para a release
-        if: runner.os == 'Linux' && github.ref_type == 'tag'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          APPIMAGE=$(find src-tauri/target/release/bundle/appimage -maxdepth 1 -name "*.AppImage")
-          gh release upload "${{ github.ref_name }}" "$APPIMAGE" --clobber
-
       - name: Guardar instaladores (Linux)
         if: runner.os == 'Linux'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: movidesk-extrator-linux
           path: |
@@ -136,8 +178,54 @@ jobs:
 
       - name: Guardar instalador (Windows)
         if: runner.os == 'Windows'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: movidesk-extrator-windows
           path: src-tauri/target/release/bundle/nsis/*.exe
           if-no-files-found: error
+
+  release:
+    needs: [versao, build]
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    env:
+      VERSAO: ${{ needs.versao.outputs.versao }}
+      ANTERIOR: ${{ needs.versao.outputs.anterior }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      # Histórico completo para listar os commits desde a release anterior.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: movidesk-extrator-*
+          merge-multiple: true
+          path: instaladores
+
+      - name: Publicar release v${{ env.VERSAO }}
+        run: |
+          if [ -n "$ANTERIOR" ]; then intervalo="v$ANTERIOR..$GITHUB_SHA"; else intervalo="$GITHUB_SHA"; fi
+          {
+            echo "Extrai todos os tickets de um cliente do Movidesk com o histórico completo de conversa."
+            echo
+            echo "- **Windows:** instalador \`.exe\`."
+            echo "- **Linux:** \`.deb\` (Ubuntu, Debian, Mint) ou \`.AppImage\` (outras distros). Precisa de glibc 2.39 ou mais nova (Ubuntu 24.04, Debian 13, Fedora 40 ou mais recentes)."
+            echo
+            echo "## Mudanças"
+            echo
+            git log --no-merges --pretty='- %s (%h)' "$intervalo"
+            if [ -n "$ANTERIOR" ]; then
+              echo
+              echo "**Comparação:** $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/compare/v$ANTERIOR...v$VERSAO"
+            fi
+          } > notas.md
+          cat notas.md
+          ls -l instaladores
+          gh release create "v$VERSAO" instaladores/* \
+            --target "$GITHUB_SHA" \
+            --title "Movidesk Extrator $VERSAO" \
+            --notes-file notas.md

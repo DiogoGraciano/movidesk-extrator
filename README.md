@@ -10,10 +10,10 @@ conversa legível em Markdown por ticket. As extrações ficam navegáveis dentr
 
 ## Download
 
-Os instaladores ficam nas [releases](https://github.com/DiogoGraciano/movidesk-extrator/releases):
-`.exe` para Windows, `.deb` ou `.AppImage` para Linux. Cada push na `main` também gera os
-instaladores como artefatos da execução em
-[Actions](https://github.com/DiogoGraciano/movidesk-extrator/actions/workflows/build.yml).
+Os instaladores ficam na [última release](https://github.com/DiogoGraciano/movidesk-extrator/releases/latest):
+`.exe` para Windows, `.deb` ou `.AppImage` para Linux. Os pacotes de Linux são compilados no
+Ubuntu 24.04 e servem para distros com glibc 2.39 ou mais nova (Ubuntu 24.04, Debian 13, Fedora 40,
+Linux Mint 22 ou mais recentes).
 
 ## Como usar
 
@@ -90,9 +90,14 @@ bun run typecheck        # TypeScript
 bun run app:build        # instaladores em src-tauri/target/release/bundle
 ```
 
-Para publicar uma versão, suba a versão em `package.json`, `src-tauri/Cargo.toml` e
-`src-tauri/tauri.conf.json` e empurre uma tag: `git tag v0.2.0 && git push origin v0.2.0`.
-O workflow `Build` cria a release com os instaladores de Windows e Linux.
+O workflow `Build` publica uma release a cada push na `main`, depois que os builds de Windows e
+Linux passam. Pushes que só mudam arquivos `.md` não geram release. Pull requests só compilam e
+deixam os instaladores como artefatos da execução em
+[Actions](https://github.com/DiogoGraciano/movidesk-extrator/actions/workflows/build.yml).
+
+A versão sobe sozinha no último número (0.1.0, 0.1.1, 0.1.2...), a partir da última tag `v*`.
+Para ir para 0.2.0 ou 1.0.0, troque a versão em `src-tauri/tauri.conf.json` (e, para manter
+igual, em `package.json` e `src-tauri/Cargo.toml`): a próxima release sai com ela.
 
 A chave da API nunca vai para o repositório nem para o CI. Copie `.env.example` para `.env`
 (ignorado pelo git) e preencha a sua.
