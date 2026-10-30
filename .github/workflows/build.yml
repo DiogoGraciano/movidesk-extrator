@@ -224,8 +224,10 @@ jobs:
             fi
           } > notas.md
           cat notas.md
-          ls -l instaladores
-          gh release create "v$VERSAO" instaladores/* \
+          # O artefato de Linux mantém as subpastas deb/ e appimage/.
+          mapfile -t arquivos < <(find instaladores -type f | sort)
+          printf '%s\n' "${arquivos[@]}"
+          gh release create "v$VERSAO" "${arquivos[@]}" \
             --target "$GITHUB_SHA" \
             --title "Movidesk Extrator $VERSAO" \
             --notes-file notas.md
