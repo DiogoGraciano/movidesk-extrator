@@ -106,6 +106,10 @@ jobs:
           echo "Corrigindo $APPIMAGE"
           "$APPIMAGE" --appimage-extract > /dev/null
           rm -f squashfs-root/usr/lib/libwayland-client.so*
+          # A extração deixa as pastas em 0700 e o appimagetool atual recusa
+          # empacotar algo que outros usuários não conseguem ler.
+          chmod -R a+rX squashfs-root
+          chmod a+rx squashfs-root/AppRun
           curl -sL -o appimagetool https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
           chmod +x appimagetool
           rm -f "$APPIMAGE"
